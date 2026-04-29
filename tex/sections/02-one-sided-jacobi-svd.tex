@@ -313,6 +313,11 @@ $a_p,a_q$。若 $a_p^Ta_q\ne0$，说明这两个输出方向尚未正交。Jacob
 $(p,q)$ 的遍历方式替换为巡回赛排序，使同一批次中的列对互不重叠，从而将“局部旋转”提升为
 “批量并行旋转”。算法本体保持不变；改变的是调度方式与硬件映射。
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth]{figures/one-sided-jacobi.png}
+\end{figure}
+
 \subsection{复杂度分析}
 
 复杂度分析需要区分两个层次：一是固定一次 sweep 内的代价，二是算法达到给定容差所需的 sweep 数。

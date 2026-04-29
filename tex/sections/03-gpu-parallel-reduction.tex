@@ -1,5 +1,9 @@
 \section{在 GPU 上并行化与规约}
 
+\begin{center}
+    \includegraphics[width=0.92\textwidth]{figures/gpu-architecture.png}
+\end{center}
+
 前两章已经建立了 SVD 的数学结构与单边雅可比（one-sided Jacobi）算法。本章转向
 \texttt{kernels.cu} 的 CUDA 实现。不过这里的重点不是把串行伪代码机械搬进 kernel，
 而是解释一条更关键的翻译链：

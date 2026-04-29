@@ -115,6 +115,10 @@ I/O 层的核心领域对象是 \texttt{Matrix}：
     \end{tabular}
 \end{table}
 
+\begin{center}
+    \includegraphics[width=0.92\textwidth]{figures/what-is-memory-mapping.png}
+\end{center}
+
 内存映射的系统语义可以概括为：
 \[
     \text{file bytes}
@@ -123,11 +127,13 @@ I/O 层的核心领域对象是 \texttt{Matrix}：
     \longleftrightarrow
     \text{process virtual address space}.
 \]
+
 程序不再围绕 \texttt{read()} 系统调用显式搬运固定大小缓冲区，而是获得一段虚拟地址范围。
 实际页面在访问时由页错误（page fault）按需载入，并由操作系统的页缓存（page cache）管理复用与回写。
 这通常减少了用户态缓冲区管理、系统调用频率与重复拷贝，但它并不等于算法层面的“零拷贝”。
 当前实现仍然需要把磁盘上的网络序字节解码为主机侧 \texttt{std::vector<double>}，因为后续 CUDA 计算需要
 连续、可拥有、可传输到设备的数值数组。
+
 
 \subsection{只读映射：不可变字节视图与游标推进}
 
@@ -211,6 +217,10 @@ I/O 层的核心领域对象是 \texttt{Matrix}：
 包括 \texttt{msync} / \texttt{FlushViewOfFile} 以及
 \texttt{munmap} / \texttt{UnmapViewOfFile}。但相比每个小块都执行系统调用，它把高频路径压缩为
 用户态内存拷贝，把低频路径交给容量管理。
+
+\begin{center}
+    \includegraphics[width=0.92\textwidth]{figures/memory-mapping-rw.png}
+\end{center}
 
 \subsection{编码与解码：分块处理而不是整块临时复制}
 
