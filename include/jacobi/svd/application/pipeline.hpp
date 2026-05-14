@@ -1,15 +1,12 @@
 #pragma once
 
-#include "kernels.hpp"
+#include "jacobi/svd/domain/kernels.hpp"
 
 #include <cstddef>
 #include <filesystem>
 
 namespace jacobi::svd::pipeline
 {
-    /**
-     * @brief 矩阵文件格式枚举；Matrix file format enumeration.
-     */
     enum class MatrixFileFormat
     {
         /**
