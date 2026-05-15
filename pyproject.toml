@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jacobi-svd-cuda-opt"
+version = "0.1.0"
+description = "Utilities for the Jacobi SVD CUDA optimization project."
+readme = "STRUCTURE.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+
+[tool.setuptools]
+package-dir = { "" = "psrc" }
+
+[tool.setuptools.packages.find]
+where = ["psrc"]
