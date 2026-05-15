@@ -32,48 +32,76 @@ jacobi-svd-cuda-opt/
 │               ├── matrix_stream.hpp
 │               ├── pinned_host_task_buffer.hpp
 │               └── txt_file.hpp
-└── src/
-    ├── application/
-    │   ├── kernel_stage.hpp
-    │   ├── output_stage.hpp
-    │   ├── pipeline.cu
-    │   ├── pipeline_detail.hpp
-    │   ├── pipeline_helpers.cu
-    │   ├── result_writer.hpp
-    │   ├── text_testcase_source.hpp
-    │   └── thread_pool.hpp
-    ├── domain/
-    │   ├── cuda_check.cuh
-    │   ├── cuda_error.cu
-    │   ├── device_buffer.cuh
-    │   ├── device_matrix.cu
-    │   ├── jacobi_rotation_kernels.cuh
-    │   ├── jacobi_schedule.cuh
-    │   ├── jacobi_svd.cu
-    │   ├── jacobi_svd_detail.hpp
-    │   ├── layout_transpose_autotune.cu
-    │   ├── layout_transpose_kernels.cuh
-    │   └── matrix_index.cuh
-    ├── infrastructure/
-    │   ├── append_mapped_output_file.hpp
-    │   ├── files.cu
-    │   ├── io_detail.hpp
-    │   ├── mat_dispatch_reader.cu
-    │   ├── mat_file.cu
-    │   ├── memory_mapped_input_file.hpp
-    │   ├── pinned_host_task_buffer.cu
-    │   └── txt_file.cu
-    └── interfaces/
-        ├── arg_parser.hpp
-        ├── cli.hpp
-        ├── cli_actions.hpp
-        ├── cli_parser.cu
-        ├── cli_support.cu
-        ├── cli_types.hpp
-        └── main.cu
+├── src/
+│   ├── CMakeLists.txt
+│   ├── application/
+│   │   ├── kernel_stage.hpp
+│   │   ├── output_stage.hpp
+│   │   ├── pipeline.cu
+│   │   ├── pipeline_detail.hpp
+│   │   ├── pipeline_helpers.cu
+│   │   ├── result_writer.hpp
+│   │   ├── text_testcase_source.hpp
+│   │   └── thread_pool.hpp
+│   ├── domain/
+│   │   ├── cuda_check.cuh
+│   │   ├── cuda_error.cu
+│   │   ├── device_buffer.cuh
+│   │   ├── device_matrix.cu
+│   │   ├── jacobi_rotation_kernels.cuh
+│   │   ├── jacobi_schedule.cuh
+│   │   ├── jacobi_svd.cu
+│   │   ├── jacobi_svd_detail.hpp
+│   │   ├── layout_transpose_autotune.cu
+│   │   ├── layout_transpose_kernels.cuh
+│   │   └── matrix_index.cuh
+│   ├── infrastructure/
+│   │   ├── append_mapped_output_file.hpp
+│   │   ├── files.cu
+│   │   ├── io_detail.hpp
+│   │   ├── mat_dispatch_reader.cu
+│   │   ├── mat_file.cu
+│   │   ├── memory_mapped_input_file.hpp
+│   │   ├── pinned_host_task_buffer.cu
+│   │   └── txt_file.cu
+│   └── interfaces/
+│       ├── arg_parser.hpp
+│       ├── cli.hpp
+│       ├── cli_actions.hpp
+│       ├── cli_parser.cu
+│       ├── cli_support.cu
+│       ├── cli_types.hpp
+│       └── main.cu
+└── tests/
+    ├── CMakeLists.txt
+    └── cli_parser_tests.cu
 ```
 
 `build/` 是 CMake/NVCC 生成目录，不属于源码结构；`.git/`、`.vscode/` 等本地工具目录也不纳入架构说明。
+
+## 构建结构
+
+顶层 `CMakeLists.txt` 只承担项目装配职责：声明项目、设置项目级选项、加入 `src/`，并在显式开启 `JACOBI_BUILD_TESTS` 时加入 `tests/`。源码清单、主程序目标、NVCC driver mode/native CUDA mode 的构建细节都下沉到 `src/CMakeLists.txt`。
+
+这种拆分让根目录不需要知道接口层、应用层、领域层和基础设施层各自有哪些 `.cu` 文件；后续新增算法源文件或调整 executable 构建方式时，改动主要局限在 `src/` 内。
+
+## 测试结构
+
+`tests/` 存放 CTest 驱动的单元测试（Unit Test）。顶层 `CMakeLists.txt` 只保留 `JACOBI_BUILD_TESTS` 项目级开关，以及让根构建目录可被 `ctest` 发现测试所需的最小 CTest 初始化；测试目标、测试标签和 `check` 目标都放在 `tests/` 子目录内，避免测试细节污染根构建脚本。
+
+当前测试基础设施兼容两条构建路径：
+
+- 默认 NVCC driver mode：测试目标通过与主程序一致的 `nvcc` 参数构建，产物写入 `build/`。
+- CMake native CUDA language mode：测试目标使用普通 `add_executable()`，便于以后接入更细粒度的 target 属性、sanitizer 或 IDE 工具链。
+
+日常验证可以使用：
+
+```bash
+cmake -S . -B build -DJACOBI_BUILD_TESTS=ON
+cmake --build build --target check
+```
+
+其中 `check` 会先构建测试可执行文件，再调用 `ctest --output-on-failure`。这避免了手动运行 `ctest` 时测试二进制尚未构建的问题。
 
 ## 分层说明
 
