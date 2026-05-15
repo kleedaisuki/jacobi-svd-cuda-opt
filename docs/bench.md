@@ -13,7 +13,7 @@
 The first positional argument is an instance name or a direct path to an instance script. For `sample`, the script resolves:
 
 ```text
-experiments/instances/sample.sh
+scripts/instances/sample.sh
 ```
 
 ## Instance Format

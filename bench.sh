@@ -6,7 +6,7 @@ REPO_ROOT="${SCRIPT_DIR}"
 ORIGINAL_CWD="$(pwd)"
 BUILD_DIR="${BUILD_DIR:-${REPO_ROOT}/build}"
 EXE_PATH="${EXE_PATH:-${BUILD_DIR}/jacobi-svd-cuda}"
-INSTANCES_DIR="${INSTANCES_DIR:-${REPO_ROOT}/experiments/instances}"
+INSTANCES_DIR="${INSTANCES_DIR:-${REPO_ROOT}/scripts/instances}"
 PROF_DIR="${PROF_DIR:-${REPO_ROOT}/experiments/prof}"
 
 # shellcheck source=scripts/bench/core.sh
