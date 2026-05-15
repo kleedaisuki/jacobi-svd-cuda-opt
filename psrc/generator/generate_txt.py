@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from generator.common import add_common_arguments, iter_matrices, options_from_args, prepare_output_path, write_txt_stream
+from generator.common import add_common_arguments, generate_files, options_from_args, write_txt_stream
 
 
 DEFAULT_OUTPUT = Path("experiments/cases/txt/generated.txt")
@@ -23,9 +23,8 @@ def run(args: argparse.Namespace) -> int:
     """Run text generation from parsed arguments."""
 
     options = options_from_args(args)
-    prepare_output_path(options.output, options.overwrite)
-    count = write_txt_stream(options.output, iter_matrices(options))
-    print(f"generated {count} text testcase(s): {options.output}")
+    count = generate_files(options, ".txt", write_txt_stream)
+    print(f"generated {count} total text testcase(s)")
     return 0
 
 
