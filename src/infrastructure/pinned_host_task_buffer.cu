@@ -1,6 +1,6 @@
-#include "jacobi/svd/io/pinned_host_task_buffer.hpp"
+#include "jacobi/svd/io/pinned_host_task_buffer.cuh"
 
-#include "src/infrastructure/io_detail.hpp"
+#include "src/infrastructure/io_detail.cuh"
 
 namespace jacobi::svd::io
 {

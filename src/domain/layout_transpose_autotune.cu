@@ -1,6 +1,6 @@
-#include "jacobi/svd/domain/jacobi_svd.hpp"
+#include "jacobi/svd/domain/jacobi_svd.cuh"
 
-#include "src/domain/jacobi_svd_detail.hpp"
+#include "src/domain/jacobi_svd_detail.cuh"
 
 #include <algorithm>
 #include <array>

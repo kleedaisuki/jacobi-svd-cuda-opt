@@ -1,7 +1,7 @@
-#include "jacobi/svd/io/txt_file.hpp"
+#include "jacobi/svd/io/txt_file.cuh"
 
-#include "jacobi/svd/io/matrix_stream.hpp"
-#include "src/infrastructure/io_detail.hpp"
+#include "jacobi/svd/io/matrix_stream.cuh"
+#include "src/infrastructure/io_detail.cuh"
 
 #include <memory>
 

@@ -1,11 +1,11 @@
-#include "jacobi/svd/application/pipeline.hpp"
+#include "jacobi/svd/application/pipeline.cuh"
 
-#include "src/application/kernel_stage.hpp"
-#include "src/application/output_stage.hpp"
-#include "src/application/text_testcase_source.hpp"
-#include "src/application/thread_pool.hpp"
+#include "src/application/kernel_stage.cuh"
+#include "src/application/output_stage.cuh"
+#include "src/application/text_testcase_source.cuh"
+#include "src/application/thread_pool.cuh"
 
-#include "jacobi/svd/io/io.hpp"
+#include "jacobi/svd/io/io.cuh"
 
 #include <atomic>
 #include <cstddef>

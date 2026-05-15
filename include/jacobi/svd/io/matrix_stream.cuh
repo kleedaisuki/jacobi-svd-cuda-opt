@@ -1,7 +1,7 @@
 #pragma once
 
-#include "jacobi/svd/io/mat_file.hpp"
-#include "jacobi/svd/io/txt_file.hpp"
+#include "jacobi/svd/io/mat_file.cuh"
+#include "jacobi/svd/io/txt_file.cuh"
 
 #include <concepts>
 #include <filesystem>

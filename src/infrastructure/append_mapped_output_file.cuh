@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/infrastructure/io_detail.hpp"
+#include "src/infrastructure/io_detail.cuh"
 
 namespace jacobi::svd::io::detail
 {

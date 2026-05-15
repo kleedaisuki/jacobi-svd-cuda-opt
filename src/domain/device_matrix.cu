@@ -1,4 +1,4 @@
-#include "jacobi/svd/domain/device_matrix.hpp"
+#include "jacobi/svd/domain/device_matrix.cuh"
 
 #include "src/domain/cuda_check.cuh"
 

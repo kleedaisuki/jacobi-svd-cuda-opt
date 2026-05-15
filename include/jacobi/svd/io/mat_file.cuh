@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jacobi/svd/io/matrix.hpp"
+#include "jacobi/svd/io/matrix.cuh"
 
 #include <filesystem>
 #include <memory>

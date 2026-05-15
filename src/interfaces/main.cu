@@ -1,6 +1,6 @@
-#include "src/interfaces/cli.hpp"
+#include "src/interfaces/cli.cuh"
 
-#include "jacobi/svd/application/pipeline.hpp"
+#include "jacobi/svd/application/pipeline.cuh"
 
 #include <chrono>
 #include <exception>

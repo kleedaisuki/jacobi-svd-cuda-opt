@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jacobi/svd/domain/jacobi_svd.hpp"
+#include "jacobi/svd/domain/jacobi_svd.cuh"
 
 #include <cstddef>
 #include <span>

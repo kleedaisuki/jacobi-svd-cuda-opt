@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jacobi/svd/domain/kernels.hpp"
+#include "jacobi/svd/domain/kernels.cuh"
 
 #include <cstddef>
 #include <filesystem>

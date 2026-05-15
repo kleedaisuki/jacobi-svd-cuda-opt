@@ -1,11 +1,11 @@
-#include "jacobi/svd/domain/jacobi_svd.hpp"
+#include "jacobi/svd/domain/jacobi_svd.cuh"
 
-#include "jacobi/svd/domain/device_matrix.hpp"
+#include "jacobi/svd/domain/device_matrix.cuh"
 #include "src/domain/cuda_check.cuh"
 #include "src/domain/device_buffer.cuh"
 #include "src/domain/jacobi_rotation_kernels.cuh"
 #include "src/domain/jacobi_schedule.cuh"
-#include "src/domain/jacobi_svd_detail.hpp"
+#include "src/domain/jacobi_svd_detail.cuh"
 #include "src/domain/layout_transpose_kernels.cuh"
 
 #include <cuda_runtime.h>

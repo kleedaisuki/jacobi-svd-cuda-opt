@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jacobi/svd/domain/layout_transpose.hpp"
+#include "jacobi/svd/domain/layout_transpose.cuh"
 
 #include <cstddef>
 

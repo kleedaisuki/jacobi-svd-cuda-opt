@@ -1,7 +1,7 @@
-#include "jacobi/svd/io/files.hpp"
+#include "jacobi/svd/io/files.cuh"
 
-#include "jacobi/svd/io/mat_file.hpp"
-#include "jacobi/svd/io/txt_file.hpp"
+#include "jacobi/svd/io/mat_file.cuh"
+#include "jacobi/svd/io/txt_file.cuh"
 
 namespace jacobi::svd::io
 {

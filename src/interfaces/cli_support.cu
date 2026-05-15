@@ -1,4 +1,4 @@
-#include "src/interfaces/cli.hpp"
+#include "src/interfaces/cli.cuh"
 
 #include <algorithm>
 #include <cctype>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/interfaces/arg_parser.hpp"
+#include "src/interfaces/arg_parser.cuh"
 
 #include <cstddef>
 #include <string>

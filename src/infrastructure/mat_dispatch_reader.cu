@@ -1,6 +1,6 @@
-#include "jacobi/svd/io/mat_dispatch.hpp"
+#include "jacobi/svd/io/mat_dispatch.cuh"
 
-#include "src/infrastructure/io_detail.hpp"
+#include "src/infrastructure/io_detail.cuh"
 
 namespace jacobi::svd::io
 {

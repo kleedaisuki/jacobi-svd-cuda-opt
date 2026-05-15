@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/interfaces/cli_types.hpp"
+#include "src/interfaces/cli_types.cuh"
 
 #include <optional>
 #include <string>

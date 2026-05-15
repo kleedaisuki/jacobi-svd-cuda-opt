@@ -1,7 +1,7 @@
 #pragma once
 
-#include "src/application/pipeline_detail.hpp"
-#include "src/application/result_writer.hpp"
+#include "src/application/pipeline_detail.cuh"
+#include "src/application/result_writer.cuh"
 
 #include <condition_variable>
 #include <exception>

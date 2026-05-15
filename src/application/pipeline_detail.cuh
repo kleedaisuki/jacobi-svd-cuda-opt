@@ -1,7 +1,7 @@
 #pragma once
 
-#include "jacobi/svd/application/pipeline.hpp"
-#include "jacobi/svd/io/io.hpp"
+#include "jacobi/svd/application/pipeline.cuh"
+#include "jacobi/svd/io/io.cuh"
 
 #include <cstddef>
 #include <filesystem>

@@ -1,9 +1,9 @@
-#include "jacobi/svd/io/mat_file.hpp"
+#include "jacobi/svd/io/mat_file.cuh"
 
-#include "jacobi/svd/io/matrix_stream.hpp"
-#include "src/infrastructure/append_mapped_output_file.hpp"
-#include "src/infrastructure/io_detail.hpp"
-#include "src/infrastructure/memory_mapped_input_file.hpp"
+#include "jacobi/svd/io/matrix_stream.cuh"
+#include "src/infrastructure/append_mapped_output_file.cuh"
+#include "src/infrastructure/io_detail.cuh"
+#include "src/infrastructure/memory_mapped_input_file.cuh"
 
 #include <memory>
 

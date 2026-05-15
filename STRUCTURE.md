@@ -13,36 +13,36 @@ jacobi-svd-cuda-opt/
 │   └── jacobi/
 │       └── svd/
 │           ├── application/
-│           │   └── pipeline.hpp
+│           │   └── pipeline.cuh
 │           ├── domain/
-│           │   ├── cuda_error.hpp
-│           │   ├── device_matrix.hpp
-│           │   ├── jacobi_svd.hpp
-│           │   ├── jacobi_svd_config.hpp
-│           │   ├── jacobi_svd_result.hpp
-│           │   ├── kernels.hpp
-│           │   └── layout_transpose.hpp
+│           │   ├── cuda_error.cuh
+│           │   ├── device_matrix.cuh
+│           │   ├── jacobi_svd.cuh
+│           │   ├── jacobi_svd_config.cuh
+│           │   ├── jacobi_svd_result.cuh
+│           │   ├── kernels.cuh
+│           │   └── layout_transpose.cuh
 │           └── io/
-│               ├── files.hpp
-│               ├── io.hpp
-│               ├── mat_dispatch.hpp
-│               ├── mat_file.hpp
-│               ├── mat_metadata.hpp
-│               ├── matrix.hpp
-│               ├── matrix_stream.hpp
-│               ├── pinned_host_task_buffer.hpp
-│               └── txt_file.hpp
+│               ├── files.cuh
+│               ├── io.cuh
+│               ├── mat_dispatch.cuh
+│               ├── mat_file.cuh
+│               ├── mat_metadata.cuh
+│               ├── matrix.cuh
+│               ├── matrix_stream.cuh
+│               ├── pinned_host_task_buffer.cuh
+│               └── txt_file.cuh
 ├── src/
 │   ├── CMakeLists.txt
 │   ├── application/
-│   │   ├── kernel_stage.hpp
-│   │   ├── output_stage.hpp
+│   │   ├── kernel_stage.cuh
+│   │   ├── output_stage.cuh
 │   │   ├── pipeline.cu
-│   │   ├── pipeline_detail.hpp
+│   │   ├── pipeline_detail.cuh
 │   │   ├── pipeline_helpers.cu
-│   │   ├── result_writer.hpp
-│   │   ├── text_testcase_source.hpp
-│   │   └── thread_pool.hpp
+│   │   ├── result_writer.cuh
+│   │   ├── text_testcase_source.cuh
+│   │   └── thread_pool.cuh
 │   ├── domain/
 │   │   ├── cuda_check.cuh
 │   │   ├── cuda_error.cu
@@ -51,26 +51,26 @@ jacobi-svd-cuda-opt/
 │   │   ├── jacobi_rotation_kernels.cuh
 │   │   ├── jacobi_schedule.cuh
 │   │   ├── jacobi_svd.cu
-│   │   ├── jacobi_svd_detail.hpp
+│   │   ├── jacobi_svd_detail.cuh
 │   │   ├── layout_transpose_autotune.cu
 │   │   ├── layout_transpose_kernels.cuh
 │   │   └── matrix_index.cuh
 │   ├── infrastructure/
-│   │   ├── append_mapped_output_file.hpp
+│   │   ├── append_mapped_output_file.cuh
 │   │   ├── files.cu
-│   │   ├── io_detail.hpp
+│   │   ├── io_detail.cuh
 │   │   ├── mat_dispatch_reader.cu
 │   │   ├── mat_file.cu
-│   │   ├── memory_mapped_input_file.hpp
+│   │   ├── memory_mapped_input_file.cuh
 │   │   ├── pinned_host_task_buffer.cu
 │   │   └── txt_file.cu
 │   └── interfaces/
-│       ├── arg_parser.hpp
-│       ├── cli.hpp
-│       ├── cli_actions.hpp
+│       ├── arg_parser.cuh
+│       ├── cli.cuh
+│       ├── cli_actions.cuh
 │       ├── cli_parser.cu
 │       ├── cli_support.cu
-│       ├── cli_types.hpp
+│       ├── cli_types.cuh
 │       └── main.cu
 └── tests/
     ├── CMakeLists.txt
@@ -113,17 +113,17 @@ cmake --build build --target check
 
 ### 2. Application Layer
 
-`include/jacobi/svd/application/pipeline.hpp` 暴露应用层公共接口：`PipelineConfig`、`PipelineReport`、`JacobiSvdPipeline` 与 `run_pipeline()`。
+`include/jacobi/svd/application/pipeline.cuh` 暴露应用层公共接口：`PipelineConfig`、`PipelineReport`、`JacobiSvdPipeline` 与 `run_pipeline()`。
 
 `src/application/` 实现 `testcases -> kernel -> output` 的执行流：
 
 - `pipeline.cu` 是聚合根实现，负责解析输入/输出格式、可选执行布局转置阈值自动调优、提交计算任务、关闭输出阶段并生成运行报告。
-- `kernel_stage.hpp` 把单个输入矩阵转换为 `U`、`Sigma`、`V` 三个输出矩阵。
-- `output_stage.hpp` 使用 future 队列（Future Queue）和消费者线程写出结果，队列容量由 `max_queued_results` 控制。
-- `result_writer.hpp` 根据输出格式选择 `MatOutputStream` 或 `TxtOutputStream`，每个 testcase 固定写出三张矩阵：`U`、`Sigma(1 x n)`、`V`。
-- `text_testcase_source.hpp` 封装文本输入流；二进制 `.mat` 输入在 `pipeline.cu` 中使用 `MatDispatchReader` 单游标派发。
-- `thread_pool.hpp` 提供全局线程池（Thread Pool），使多个 testcase 的 CPU 解析与 GPU 调用可以通过 future 编排。
-- `pipeline_helpers.cu` 和 `pipeline_detail.hpp` 提供格式解析、输出目录检查、矩阵尺寸校验、溢出检查和内部 `OutputPacket`。
+- `kernel_stage.cuh` 把单个输入矩阵转换为 `U`、`Sigma`、`V` 三个输出矩阵。
+- `output_stage.cuh` 使用 future 队列（Future Queue）和消费者线程写出结果，队列容量由 `max_queued_results` 控制。
+- `result_writer.cuh` 根据输出格式选择 `MatOutputStream` 或 `TxtOutputStream`，每个 testcase 固定写出三张矩阵：`U`、`Sigma(1 x n)`、`V`。
+- `text_testcase_source.cuh` 封装文本输入流；二进制 `.mat` 输入在 `pipeline.cu` 中使用 `MatDispatchReader` 单游标派发。
+- `thread_pool.cuh` 提供全局线程池（Thread Pool），使多个 testcase 的 CPU 解析与 GPU 调用可以通过 future 编排。
+- `pipeline_helpers.cu` 和 `pipeline_detail.cuh` 提供格式解析、输出目录检查、矩阵尺寸校验、溢出检查和内部 `OutputPacket`。
 
 这里的设计重点不是“多线程写同一个文件”，而是让计算任务并行提交，写线程按提交顺序消费 future。这样结果顺序稳定，同时避免把全部结果留在内存中。
 
@@ -131,12 +131,12 @@ cmake --build build --target check
 
 `include/jacobi/svd/domain/` 是算法公共 API：
 
-- `jacobi_svd.hpp` 暴露 `one_sided_jacobi_svd()` 与 `auto_tune_layout_transpose_threshold()`。
-- `jacobi_svd_config.hpp` 定义收敛阈值、最大 sweep、线程数、布局转置策略与自动调优参数。
-- `jacobi_svd_result.hpp` 定义主机侧结果容器：`U`、`Sigma`、`V` 和实际 sweep 数。
-- `device_matrix.hpp` 封装行主序设备矩阵（Device Matrix）的生命周期，kernel 侧只接收裸指针。
-- `layout_transpose.hpp` 定义布局转置策略（Layout Transpose Policy）与自动调优报告。
-- `kernels.hpp` 是领域层聚合头文件。
+- `jacobi_svd.cuh` 暴露 `one_sided_jacobi_svd()` 与 `auto_tune_layout_transpose_threshold()`。
+- `jacobi_svd_config.cuh` 定义收敛阈值、最大 sweep、线程数、布局转置策略与自动调优参数。
+- `jacobi_svd_result.cuh` 定义主机侧结果容器：`U`、`Sigma`、`V` 和实际 sweep 数。
+- `device_matrix.cuh` 封装行主序设备矩阵（Device Matrix）的生命周期，kernel 侧只接收裸指针。
+- `layout_transpose.cuh` 定义布局转置策略（Layout Transpose Policy）与自动调优报告。
+- `kernels.cuh` 是领域层聚合头文件。
 
 `src/domain/` 是 CUDA 实现细节：
 
@@ -155,13 +155,13 @@ cmake --build build --target check
 
 `include/jacobi/svd/io/` 是矩阵输入输出公共 API：
 
-- `matrix.hpp` 定义行主序矩阵容器 `Matrix`。
-- `mat_metadata.hpp` 定义 `.mat` 文件头 `MatMetaData { rows, columns }`，磁盘中使用网络字节序（Network Byte Order）。
-- `matrix_stream.hpp` 定义矩阵输入/输出 policy 概念（Policy Concept），并用 `MatrixInputStream`、`MatrixOutputStream` 解耦流控制与文件格式。
-- `mat_file.hpp` 和 `txt_file.hpp` 定义 `.mat` 与 `.txt` 的 policy、reader、writer。
-- `mat_dispatch.hpp` 定义 `.mat` 单游标派发读取器 `MatDispatchReader` 与 `MatDispatchTask`，用于 pipeline 的低驻留内存读取。
-- `pinned_host_task_buffer.hpp` 暴露页锁定任务缓冲区。
-- `files.hpp` 保留批量读写兼容接口，`io.hpp` 是 IO 聚合头。
+- `matrix.cuh` 定义行主序矩阵容器 `Matrix`。
+- `mat_metadata.cuh` 定义 `.mat` 文件头 `MatMetaData { rows, columns }`，磁盘中使用网络字节序（Network Byte Order）。
+- `matrix_stream.cuh` 定义矩阵输入/输出 policy 概念（Policy Concept），并用 `MatrixInputStream`、`MatrixOutputStream` 解耦流控制与文件格式。
+- `mat_file.cuh` 和 `txt_file.cuh` 定义 `.mat` 与 `.txt` 的 policy、reader、writer。
+- `mat_dispatch.cuh` 定义 `.mat` 单游标派发读取器 `MatDispatchReader` 与 `MatDispatchTask`，用于 pipeline 的低驻留内存读取。
+- `pinned_host_task_buffer.cuh` 暴露页锁定任务缓冲区。
+- `files.cuh` 保留批量读写兼容接口，`io.cuh` 是 IO 聚合头。
 
 `src/infrastructure/` 是这些 API 的实现：
 
@@ -169,8 +169,8 @@ cmake --build build --target check
 - `txt_file.cu` 使用文本流处理空格分隔、换行分隔的矩阵；矩阵之间以空行分隔。
 - `mat_dispatch_reader.cu` 逐条读取 `.mat` 元数据与 payload，把原始网络字节序 payload 放入 `PinnedHostTaskBuffer`，再由工作线程解码。
 - `pinned_host_task_buffer.cu` 使用 `cudaMallocHost/cudaFreeHost` 管理一块连续的输入区加工作区。
-- `memory_mapped_input_file.hpp` 和 `append_mapped_output_file.hpp` 封装平台相关的映射文件操作。
-- `io_detail.hpp` 提供字节序转换、payload 尺寸检查、矩阵序列化/反序列化等共用细节。
+- `memory_mapped_input_file.cuh` 和 `append_mapped_output_file.cuh` 封装平台相关的映射文件操作。
+- `io_detail.cuh` 提供字节序转换、payload 尺寸检查、矩阵序列化/反序列化等共用细节。
 - `files.cu` 实现 `read_mat_file/write_mat_file/read_txt_file/write_txt_file` 兼容函数。
 
 ## 文件格式

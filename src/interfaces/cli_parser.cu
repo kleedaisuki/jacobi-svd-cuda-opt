@@ -1,4 +1,4 @@
-#include "src/interfaces/cli.hpp"
+#include "src/interfaces/cli.cuh"
 
 #include <algorithm>
 #include <filesystem>
@@ -337,7 +337,8 @@ namespace jacobi::svd::cli
     {
         const auto iterator = std::find_if(definitions_.begin(),
                                            definitions_.end(),
-                                           [name](const OptionDefinition &option) {
+                                           [name](const OptionDefinition &option)
+                                           {
                                                return option.short_name == name;
                                            });
         if (iterator == definitions_.end())

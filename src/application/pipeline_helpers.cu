@@ -1,4 +1,4 @@
-#include "src/application/pipeline_detail.hpp"
+#include "src/application/pipeline_detail.cuh"
 
 #include <algorithm>
 #include <cctype>

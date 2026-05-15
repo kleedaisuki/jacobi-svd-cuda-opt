@@ -1,4 +1,4 @@
-#include "jacobi/svd/domain/cuda_error.hpp"
+#include "jacobi/svd/domain/cuda_error.cuh"
 
 namespace jacobi::svd
 {

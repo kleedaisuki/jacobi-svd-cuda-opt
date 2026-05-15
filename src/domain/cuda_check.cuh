@@ -1,6 +1,6 @@
 #pragma once
 
-#include "jacobi/svd/domain/cuda_error.hpp"
+#include "jacobi/svd/domain/cuda_error.cuh"
 
 #include <cuda_runtime.h>
 
