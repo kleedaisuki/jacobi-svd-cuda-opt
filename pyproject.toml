@@ -12,6 +12,7 @@ license = { file = "LICENSE" }
 
 [project.scripts]
 generate = "generator.main:main"
+extract = "extractor.main:main"
 
 [tool.setuptools]
 package-dir = { "" = "psrc" }
