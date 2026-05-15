@@ -12,6 +12,7 @@ INSTANCE is resolved as:
 Options:
   --runs N              Override repeat count from the instance script.
   --modes LIST          Comma list: timing,nsys,ncu-basic,ncu-deep.
+  --case-jobs N         Override concurrent case count from the instance script.
   --build-dir PATH      CMake build directory. Default: ./build
   --skip-build          Do not run CMake configure/build.
   --dry-run             Print commands without executing them.
@@ -25,6 +26,7 @@ Environment:
 
 Instance script contract:
   RUNS=3
+  CASE_JOBS=1
   MODES=(timing nsys ncu-basic ncu-deep)
   APP_ARGS=(--format mat --max-sweeps 128)
   add_case small experiments/cases/mat/small.mat --layout-transpose-mode auto
@@ -88,4 +90,10 @@ output_suffix_for_input() {
         txt) echo ".txt" ;;
         *) echo ".out" ;;
     esac
+}
+
+validate_positive_int() {
+    local name="$1"
+    local value="$2"
+    [[ "${value}" =~ ^[1-9][0-9]*$ ]] || die "${name} must be a positive integer"
 }

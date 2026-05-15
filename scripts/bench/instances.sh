@@ -41,6 +41,7 @@ resolve_instance() {
 
 load_instance() {
     RUNS=1
+    CASE_JOBS=1
     MODES=(timing)
     APP_ARGS=()
 
@@ -52,7 +53,12 @@ apply_overrides() {
     if [[ -n "${RUNS_OVERRIDE}" ]]; then
         RUNS="${RUNS_OVERRIDE}"
     fi
-    [[ "${RUNS}" =~ ^[1-9][0-9]*$ ]] || die "RUNS must be a positive integer"
+    validate_positive_int RUNS "${RUNS}"
+
+    if [[ -n "${CASE_JOBS_OVERRIDE}" ]]; then
+        CASE_JOBS="${CASE_JOBS_OVERRIDE}"
+    fi
+    validate_positive_int CASE_JOBS "${CASE_JOBS}"
 
     if [[ -n "${MODES_OVERRIDE}" ]]; then
         split_csv_modes "${MODES_OVERRIDE}"
@@ -76,6 +82,7 @@ write_manifest() {
         echo "instance_path=${INSTANCE_PATH}"
         echo "timestamp=${TIMESTAMP}"
         echo "runs=${RUNS}"
+        echo "case_jobs=${CASE_JOBS}"
         echo "modes=$(join_by_comma "${MODES[@]}")"
         echo "exe=${EXE_PATH}"
         echo "build_dir=${BUILD_DIR}"
