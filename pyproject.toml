@@ -10,6 +10,9 @@ readme = "STRUCTURE.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
 
+[project.scripts]
+generate = "generator.main:main"
+
 [tool.setuptools]
 package-dir = { "" = "psrc" }
 
