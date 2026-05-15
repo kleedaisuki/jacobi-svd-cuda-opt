@@ -46,10 +46,15 @@ run_nsys() {
     local output="$2"
     local report_prefix="$3"
     local log_file="$4"
-    shift 4
+    local profiler_args_raw="$5"
+    shift 5
+
+    local profiler_args=()
+    read -r -a profiler_args <<<"${profiler_args_raw}"
 
     run_logged "${log_file}" nsys profile --force-overwrite=true --trace=cuda,nvtx,osrt \
-        --stats=true -o "${report_prefix}" "${EXE_PATH}" "${input}" "${output}" --force --quiet "$@"
+        --stats=true -o "${report_prefix}" "${profiler_args[@]}" \
+        "${EXE_PATH}" "${input}" "${output}" --force --quiet "$@"
 }
 
 run_ncu_basic() {
@@ -57,9 +62,13 @@ run_ncu_basic() {
     local output="$2"
     local report_file="$3"
     local log_file="$4"
-    shift 4
+    local profiler_args_raw="$5"
+    shift 5
 
-    run_logged "${log_file}" ncu --force-overwrite --set basic --export "${report_file}" \
+    local profiler_args=()
+    read -r -a profiler_args <<<"${profiler_args_raw}"
+
+    run_logged "${log_file}" ncu --force-overwrite --set basic --export "${report_file}" "${profiler_args[@]}" \
         "${EXE_PATH}" "${input}" "${output}" --force --quiet "$@"
 }
 
@@ -68,9 +77,13 @@ run_ncu_deep() {
     local output="$2"
     local report_file="$3"
     local log_file="$4"
-    shift 4
+    local profiler_args_raw="$5"
+    shift 5
 
-    run_logged "${log_file}" ncu --force-overwrite --set full --export "${report_file}" \
+    local profiler_args=()
+    read -r -a profiler_args <<<"${profiler_args_raw}"
+
+    run_logged "${log_file}" ncu --force-overwrite --set full --export "${report_file}" "${profiler_args[@]}" \
         "${EXE_PATH}" "${input}" "${output}" --force --quiet "$@"
 }
 
@@ -99,13 +112,16 @@ run_case_mode_once() {
             run_timing "${case_name}" "${input_path}" "${output_path}" "${log_file}" "$@"
             ;;
         nsys)
-            run_nsys "${input_path}" "${output_path}" "${mode_dir}/${run_tag}_nsys" "${log_file}" "$@"
+            run_nsys "${input_path}" "${output_path}" "${mode_dir}/${run_tag}_nsys" "${log_file}" \
+                "${case_nsys_args}" "$@"
             ;;
         ncu-basic)
-            run_ncu_basic "${input_path}" "${output_path}" "${mode_dir}/${run_tag}_ncu_basic" "${log_file}" "$@"
+            run_ncu_basic "${input_path}" "${output_path}" "${mode_dir}/${run_tag}_ncu_basic" "${log_file}" \
+                "${case_ncu_basic_args}" "$@"
             ;;
         ncu-deep)
-            run_ncu_deep "${input_path}" "${output_path}" "${mode_dir}/${run_tag}_ncu_deep" "${log_file}" "$@"
+            run_ncu_deep "${input_path}" "${output_path}" "${mode_dir}/${run_tag}_ncu_deep" "${log_file}" \
+                "${case_ncu_deep_args}" "$@"
             ;;
     esac
 }
@@ -115,6 +131,9 @@ run_case() {
     local case_name="${CASE_NAMES[case_index]}"
     local input_path="${CASE_INPUTS[case_index]}"
     local case_extra="${CASE_ARGS[case_index]}"
+    local case_nsys_args="${CASE_NSYS_ARGS[case_index]}"
+    local case_ncu_basic_args="${CASE_NCU_BASIC_ARGS[case_index]}"
+    local case_ncu_deep_args="${CASE_NCU_DEEP_ARGS[case_index]}"
 
     [[ -f "${input_path}" ]] || die "input for case ${case_name} not found: ${input_path}"
 

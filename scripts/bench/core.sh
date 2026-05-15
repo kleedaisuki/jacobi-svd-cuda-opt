@@ -30,6 +30,9 @@ Instance script contract:
   MODES=(timing nsys ncu-basic ncu-deep)
   APP_ARGS=(--format mat --max-sweeps 128)
   add_case small experiments/cases/mat/small.mat --layout-transpose-mode auto
+  case_nsys_args --sample=none
+  case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
+  case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
   add_case big   experiments/cases/mat/big.mat   --layout-transpose-mode on
 
 Results are written under:
@@ -96,4 +99,31 @@ validate_positive_int() {
     local name="$1"
     local value="$2"
     [[ "${value}" =~ ^[1-9][0-9]*$ ]] || die "${name} must be a positive integer"
+}
+
+mode_enabled() {
+    local requested="$1"
+    local mode
+    for mode in "${MODES[@]}"; do
+        [[ "${mode}" == "${requested}" ]] && return 0
+    done
+    return 1
+}
+
+validate_ncu_filter() {
+    local label="$1"
+    local raw_args="$2"
+    local args=()
+    read -r -a args <<<"${raw_args}"
+
+    local arg
+    for arg in "${args[@]}"; do
+        case "${arg}" in
+            --kernel-name | -k | --kernel-name=* | -k=* | --kernel-id | --kernel-id=* | --nvtx-include | --nvtx-include=*)
+                return 0
+                ;;
+        esac
+    done
+
+    die "${label} must configure a kernel filter, e.g. case_ncu_basic_args --kernel-name 'regex:pair_stats_kernel' --launch-count 3"
 }

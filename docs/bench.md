@@ -32,10 +32,38 @@ APP_ARGS=(
 )
 
 add_case small experiments/cases/mat/small.mat --layout-transpose-mode auto
+case_nsys_args --sample=none
+case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
+case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+
 add_case large experiments/cases/mat/large.mat --layout-transpose-mode on
+case_nsys_args --sample=none
+case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
+case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
 ```
 
 `APP_ARGS` are passed to every program invocation. Arguments after each `add_case` are appended only for that case.
+
+The profiler argument helpers configure only the most recently added case:
+
+```bash
+case_nsys_args --sample=none
+case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
+case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+```
+
+`case_app_args` can also replace the per-case application arguments after `add_case`:
+
+```bash
+add_case tuned experiments/cases/mat/tuned.mat
+case_app_args --layout-transpose-mode auto --queue-capacity 4
+```
+
+For backward compatibility, this is equivalent to:
+
+```bash
+add_case tuned experiments/cases/mat/tuned.mat --layout-transpose-mode auto --queue-capacity 4
+```
 
 ## Command Options
 
@@ -111,16 +139,39 @@ nsys profile --trace=cuda,nvtx,osrt --stats=true
 `ncu-basic` runs:
 
 ```bash
-ncu --set basic
+ncu --set basic <case_ncu_basic_args>
 ```
 
 `ncu-deep` runs:
 
 ```bash
-ncu --set full
+ncu --set full <case_ncu_deep_args>
 ```
 
 Nsight Compute (`ncu`) needs permission to access NVIDIA GPU performance counters. If it fails with `ERR_NVGPUCTRPERM`, fix the system driver permission first or run only `timing,nsys`.
+
+`ncu-basic` and `ncu-deep` require a case-level kernel filter. The pipeline intentionally rejects unfiltered ncu runs because profiling every launch can take minutes or hours and create very large reports. Use one of:
+
+```bash
+case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
+case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+```
+
+Useful Nsight Compute filter flags include:
+
+```text
+--kernel-name regex:<pattern>
+--kernel-id <id>
+--launch-skip N
+--launch-count N
+--nvtx-include <range>
+```
+
+`nsys` arguments are also case-level:
+
+```bash
+case_nsys_args --sample=none --cuda-memory-usage=true
+```
 
 ## Parallelism
 

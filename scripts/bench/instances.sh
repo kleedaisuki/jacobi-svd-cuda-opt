@@ -3,6 +3,11 @@
 CASE_NAMES=()
 CASE_INPUTS=()
 CASE_ARGS=()
+CASE_NSYS_ARGS=()
+CASE_NCU_BASIC_ARGS=()
+CASE_NCU_DEEP_ARGS=()
+
+CURRENT_CASE_INDEX=""
 
 add_case() {
     local name="$1"
@@ -15,6 +20,34 @@ add_case() {
     CASE_NAMES+=("${name}")
     CASE_INPUTS+=("${input}")
     CASE_ARGS+=("$*")
+    CASE_NSYS_ARGS+=("")
+    CASE_NCU_BASIC_ARGS+=("")
+    CASE_NCU_DEEP_ARGS+=("")
+    CURRENT_CASE_INDEX="$((${#CASE_NAMES[@]} - 1))"
+}
+
+require_current_case() {
+    [[ -n "${CURRENT_CASE_INDEX}" ]] || die "$1 must follow add_case"
+}
+
+case_app_args() {
+    require_current_case case_app_args
+    CASE_ARGS["${CURRENT_CASE_INDEX}"]="$*"
+}
+
+case_nsys_args() {
+    require_current_case case_nsys_args
+    CASE_NSYS_ARGS["${CURRENT_CASE_INDEX}"]="$*"
+}
+
+case_ncu_basic_args() {
+    require_current_case case_ncu_basic_args
+    CASE_NCU_BASIC_ARGS["${CURRENT_CASE_INDEX}"]="$*"
+}
+
+case_ncu_deep_args() {
+    require_current_case case_ncu_deep_args
+    CASE_NCU_DEEP_ARGS["${CURRENT_CASE_INDEX}"]="$*"
 }
 
 resolve_instance() {
@@ -73,6 +106,16 @@ validate_instance() {
             timing | nsys | ncu-basic | ncu-deep) require_tool_for_mode "${mode}" ;;
             *) die "unsupported mode in instance: ${mode}" ;;
         esac
+    done
+
+    local case_index
+    for case_index in "${!CASE_NAMES[@]}"; do
+        if mode_enabled ncu-basic; then
+            validate_ncu_filter "case ${CASE_NAMES[case_index]} ncu-basic" "${CASE_NCU_BASIC_ARGS[case_index]}"
+        fi
+        if mode_enabled ncu-deep; then
+            validate_ncu_filter "case ${CASE_NAMES[case_index]} ncu-deep" "${CASE_NCU_DEEP_ARGS[case_index]}"
+        fi
     done
 }
 
