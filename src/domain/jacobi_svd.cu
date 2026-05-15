@@ -76,6 +76,117 @@ namespace jacobi::svd::detail
         return columns >= config.layout_transpose_min_columns &&
                element_count >= config.layout_transpose_min_elements;
     }
+
+    /**
+     * @brief 计算 cooperative sweep kernel 的 grid 配置；Compute the grid configuration for the cooperative sweep kernel.
+     * @param n 列数；Column count.
+     * @param threads 每个 block 的线程数；Threads per block.
+     * @param shared_bytes 每个 block 的动态共享内存字节数；Dynamic shared-memory bytes per block.
+     * @param grid_blocks 输出 grid block 数；Output grid block count.
+     * @return true 表示当前设备可执行 cooperative sweep；true if the current device can run the cooperative sweep.
+     */
+    template <bool ColumnMajorA>
+    [[nodiscard]] bool cooperative_sweep_grid_blocks(int n, int threads, std::size_t shared_bytes, int &grid_blocks)
+    {
+        if (n < 2)
+        {
+            return false;
+        }
+
+        int device = 0;
+        JACOBI_CUDA_CHECK(cudaGetDevice(&device));
+
+        int cooperative_launch = 0;
+        JACOBI_CUDA_CHECK(cudaDeviceGetAttribute(&cooperative_launch, cudaDevAttrCooperativeLaunch, device));
+        if (cooperative_launch == 0)
+        {
+            return false;
+        }
+
+        int sm_count = 0;
+        JACOBI_CUDA_CHECK(cudaDeviceGetAttribute(&sm_count, cudaDevAttrMultiProcessorCount, device));
+
+        int active_blocks_per_sm = 0;
+        JACOBI_CUDA_CHECK(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&active_blocks_per_sm,
+                                                                        jacobi_sweep_kernel<ColumnMajorA>,
+                                                                        threads,
+                                                                        shared_bytes));
+
+        const int even_n = n + (n & 1);
+        const int pair_slots = even_n / 2;
+        const int resident_blocks = active_blocks_per_sm * sm_count;
+        if (resident_blocks <= 0 || pair_slots <= 0)
+        {
+            return false;
+        }
+
+        grid_blocks = std::min(resident_blocks, pair_slots);
+        return grid_blocks > 0;
+    }
+
+    /**
+     * @brief 尝试用 cooperative kernel 执行所有 sweep；Try to execute all sweeps with a cooperative kernel.
+     * @param a 输入输出矩阵 A；Input/output matrix A.
+     * @param v 输入输出矩阵 V；Input/output matrix V.
+     * @param m A 的行数；Row count of A.
+     * @param n A 的列数，同时也是 V 的维度；Column count of A and dimension of V.
+     * @param config 算法配置；Algorithm configuration.
+     * @param d_any_rotation sweep 级收敛标志；Sweep-level convergence flag.
+     * @param executed_sweeps 输出已执行 sweep 数；Output executed sweep count.
+     * @return true 表示已使用 cooperative 路径完成；true if the cooperative path completed execution.
+     */
+    template <bool ColumnMajorA>
+    [[nodiscard]] bool try_run_cooperative_sweeps(double *a,
+                                                  double *v,
+                                                  int m,
+                                                  int n,
+                                                  const JacobiSvdConfig &config,
+                                                  DeviceBuffer<int> &d_any_rotation,
+                                                  int &executed_sweeps)
+    {
+        const int threads = normalize_threads_per_block(config.threads_per_block);
+        const std::size_t shared_bytes = static_cast<std::size_t>(threads) * 3 * sizeof(double);
+
+        int grid_blocks = 0;
+        if (!cooperative_sweep_grid_blocks<ColumnMajorA>(n, threads, shared_bytes, grid_blocks))
+        {
+            return false;
+        }
+
+        for (int sweep = 0; sweep < config.max_sweeps; ++sweep)
+        {
+            JACOBI_CUDA_CHECK(cudaMemset(d_any_rotation.data(), 0, sizeof(int)));
+
+            double epsilon = config.epsilon;
+            int *any_rotation_flag = d_any_rotation.data();
+            void *kernel_args[] = {
+                &a,
+                &v,
+                &m,
+                &n,
+                &epsilon,
+                &any_rotation_flag,
+            };
+            JACOBI_CUDA_CHECK(cudaLaunchCooperativeKernel(reinterpret_cast<void *>(jacobi_sweep_kernel<ColumnMajorA>),
+                                                          dim3(grid_blocks),
+                                                          dim3(threads),
+                                                          kernel_args,
+                                                          shared_bytes,
+                                                          nullptr));
+
+            int any_rotation = 0;
+            JACOBI_CUDA_CHECK(cudaMemcpy(&any_rotation, d_any_rotation.data(), sizeof(int), cudaMemcpyDeviceToHost));
+
+            executed_sweeps = sweep + 1;
+            if (any_rotation == 0)
+            {
+                break;
+            }
+        }
+
+        return true;
+    }
+
     /**
      * @brief 校验单边雅可比输入参数；Validate one-sided Jacobi input arguments.
      * @param host_input 输入缓存；Input buffer.
@@ -148,114 +259,117 @@ namespace jacobi::svd::detail
         initialize_identity_kernel<<<identity_blocks, threads>>>(d_v.data(), n);
         JACOBI_CUDA_CHECK(cudaGetLastError());
 
-        const auto rounds = build_round_robin_schedule(n);
-        std::size_t max_pairs = 0;
-        for (const auto &round : rounds)
-        {
-            max_pairs = std::max(max_pairs, round.size());
-        }
-
-        DeviceBuffer<int2> d_pairs(max_pairs);
-        DeviceBuffer<double> d_app(max_pairs);
-        DeviceBuffer<double> d_aqq(max_pairs);
-        DeviceBuffer<double> d_apq(max_pairs);
-        DeviceBuffer<double> d_c(max_pairs);
-        DeviceBuffer<double> d_s(max_pairs);
         DeviceBuffer<int> d_any_rotation(1);
 
         int executed_sweeps = 0;
+        const bool ran_cooperative =
+            use_layout_transpose
+                ? try_run_cooperative_sweeps<true>(
+                      d_a_layout.data(), d_v.data(), m, n, config, d_any_rotation, executed_sweeps)
+                : try_run_cooperative_sweeps<false>(
+                      d_a.data(), d_v.data(), m, n, config, d_any_rotation, executed_sweeps);
 
-        for (int sweep = 0; sweep < config.max_sweeps; ++sweep)
+        if (!ran_cooperative)
         {
-            bool converged_this_sweep = true;
-
+            const auto rounds = build_round_robin_schedule(n);
+            std::size_t max_pairs = 0;
             for (const auto &round : rounds)
             {
-                const int pair_count = static_cast<int>(round.size());
-                if (pair_count == 0)
-                {
-                    continue;
-                }
+                max_pairs = std::max(max_pairs, round.size());
+            }
 
-                JACOBI_CUDA_CHECK(cudaMemcpy(d_pairs.data(),
-                                             round.data(),
-                                             static_cast<std::size_t>(pair_count) * sizeof(int2),
-                                             cudaMemcpyHostToDevice));
-                JACOBI_CUDA_CHECK(cudaMemset(d_any_rotation.data(), 0, sizeof(int)));
+            DeviceBuffer<int2> d_pairs(max_pairs);
+            DeviceBuffer<double> d_app(max_pairs);
+            DeviceBuffer<double> d_aqq(max_pairs);
+            DeviceBuffer<double> d_apq(max_pairs);
 
-                const std::size_t shared_bytes_stats = static_cast<std::size_t>(threads) * 3 * sizeof(double);
-                if (use_layout_transpose)
+            for (int sweep = 0; sweep < config.max_sweeps; ++sweep)
+            {
+                bool converged_this_sweep = true;
+
+                for (const auto &round : rounds)
                 {
-                    pair_stats_kernel<true><<<pair_count, threads, shared_bytes_stats>>>(d_a_layout.data(),
+                    const int pair_count = static_cast<int>(round.size());
+                    if (pair_count == 0)
+                    {
+                        continue;
+                    }
+
+                    JACOBI_CUDA_CHECK(cudaMemcpy(d_pairs.data(),
+                                                 round.data(),
+                                                 static_cast<std::size_t>(pair_count) * sizeof(int2),
+                                                 cudaMemcpyHostToDevice));
+                    JACOBI_CUDA_CHECK(cudaMemset(d_any_rotation.data(), 0, sizeof(int)));
+
+                    const std::size_t shared_bytes_stats = static_cast<std::size_t>(threads) * 3 * sizeof(double);
+                    if (use_layout_transpose)
+                    {
+                        pair_stats_kernel<true><<<pair_count, threads, shared_bytes_stats>>>(d_a_layout.data(),
+                                                                                             m,
+                                                                                             n,
+                                                                                             d_pairs.data(),
+                                                                                             pair_count,
+                                                                                             d_app.data(),
+                                                                                             d_aqq.data(),
+                                                                                             d_apq.data());
+                    }
+                    else
+                    {
+                        pair_stats_kernel<false><<<pair_count, threads, shared_bytes_stats>>>(d_a.data(),
+                                                                                              m,
+                                                                                              n,
+                                                                                              d_pairs.data(),
+                                                                                              pair_count,
+                                                                                              d_app.data(),
+                                                                                              d_aqq.data(),
+                                                                                              d_apq.data());
+                    }
+                    JACOBI_CUDA_CHECK(cudaGetLastError());
+
+                    if (use_layout_transpose)
+                    {
+                        compute_and_apply_rotation_kernel<true><<<pair_count, threads>>>(d_a_layout.data(),
+                                                                                         d_v.data(),
                                                                                          m,
                                                                                          n,
                                                                                          d_pairs.data(),
                                                                                          pair_count,
                                                                                          d_app.data(),
                                                                                          d_aqq.data(),
-                                                                                         d_apq.data());
-                }
-                else
-                {
-                    pair_stats_kernel<false><<<pair_count, threads, shared_bytes_stats>>>(d_a.data(),
+                                                                                         d_apq.data(),
+                                                                                         config.epsilon,
+                                                                                         d_any_rotation.data());
+                    }
+                    else
+                    {
+                        compute_and_apply_rotation_kernel<false><<<pair_count, threads>>>(d_a.data(),
+                                                                                          d_v.data(),
                                                                                           m,
                                                                                           n,
                                                                                           d_pairs.data(),
                                                                                           pair_count,
                                                                                           d_app.data(),
                                                                                           d_aqq.data(),
-                                                                                          d_apq.data());
+                                                                                          d_apq.data(),
+                                                                                          config.epsilon,
+                                                                                          d_any_rotation.data());
+                    }
+                    JACOBI_CUDA_CHECK(cudaGetLastError());
+
+                    int any_rotation = 0;
+                    JACOBI_CUDA_CHECK(
+                        cudaMemcpy(&any_rotation, d_any_rotation.data(), sizeof(int), cudaMemcpyDeviceToHost));
+                    if (any_rotation != 0)
+                    {
+                        converged_this_sweep = false;
+                    }
                 }
-                JACOBI_CUDA_CHECK(cudaGetLastError());
 
-                const int rotation_blocks = (pair_count + threads - 1) / threads;
-                compute_rotation_params_kernel<<<rotation_blocks, threads>>>(d_app.data(),
-                                                                             d_aqq.data(),
-                                                                             d_apq.data(),
-                                                                             pair_count,
-                                                                             config.epsilon,
-                                                                             d_c.data(),
-                                                                             d_s.data(),
-                                                                             d_any_rotation.data());
-                JACOBI_CUDA_CHECK(cudaGetLastError());
-
-                if (use_layout_transpose)
+                executed_sweeps = sweep + 1;
+                if (converged_this_sweep)
                 {
-                    apply_rotation_kernel<true><<<pair_count, threads>>>(d_a_layout.data(),
-                                                                         d_v.data(),
-                                                                         m,
-                                                                         n,
-                                                                         d_pairs.data(),
-                                                                         pair_count,
-                                                                         d_c.data(),
-                                                                         d_s.data());
+                    break;
                 }
-                else
-                {
-                    apply_rotation_kernel<false><<<pair_count, threads>>>(d_a.data(),
-                                                                          d_v.data(),
-                                                                          m,
-                                                                          n,
-                                                                          d_pairs.data(),
-                                                                          pair_count,
-                                                                          d_c.data(),
-                                                                          d_s.data());
-                }
-                JACOBI_CUDA_CHECK(cudaGetLastError());
-
-                int any_rotation = 0;
-                JACOBI_CUDA_CHECK(
-                    cudaMemcpy(&any_rotation, d_any_rotation.data(), sizeof(int), cudaMemcpyDeviceToHost));
-                if (any_rotation != 0)
-                {
-                    converged_this_sweep = false;
-                }
-            }
-
-            executed_sweeps = sweep + 1;
-            if (converged_this_sweep)
-            {
-                break;
             }
         }
 

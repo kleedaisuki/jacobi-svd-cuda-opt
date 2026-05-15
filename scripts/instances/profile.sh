@@ -16,49 +16,49 @@ APP_ARGS=(
 add_case mat_grid_small_auto experiments/cases/baseline/mat/grid_small.mat --format mat --layout-transpose-mode auto
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case mat_square_medium_auto experiments/cases/baseline/mat/square_medium.mat --format mat --layout-transpose-mode auto
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case mat_square_medium_off experiments/cases/baseline/mat/square_medium.mat --format mat --layout-transpose-mode off
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case mat_square_medium_on experiments/cases/baseline/mat/square_medium.mat --format mat --layout-transpose-mode on
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case mat_tall_skinny_medium_auto experiments/cases/baseline/mat/tall_skinny_medium.mat --format mat --layout-transpose-mode auto
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case mat_tall_skinny_medium_off experiments/cases/baseline/mat/tall_skinny_medium.mat --format mat --layout-transpose-mode off
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case mat_tall_skinny_medium_on experiments/cases/baseline/mat/tall_skinny_medium.mat --format mat --layout-transpose-mode on
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case mat_ill_conditioned_auto experiments/cases/baseline/mat/ill_conditioned.mat --format mat --layout-transpose-mode auto
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case mat_sparse_auto experiments/cases/baseline/mat/sparse.mat --format mat --layout-transpose-mode auto
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case txt_grid_small_auto experiments/cases/baseline/txt/grid_small.txt --format txt --layout-transpose-mode auto
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 2
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1

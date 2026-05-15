@@ -29,7 +29,7 @@ case_ncu_basic_args \
     --kernel-name regex:pair_stats_kernel \
     --launch-count 2
 case_ncu_deep_args \
-    --kernel-name regex:apply_rotation_kernel \
+    --kernel-name regex:jacobi_sweep_kernel \
     --launch-count 1
 
 add_case \
@@ -42,7 +42,7 @@ case_ncu_basic_args \
     --kernel-name regex:pair_stats_kernel \
     --launch-count 2
 case_ncu_deep_args \
-    --kernel-name regex:apply_rotation_kernel \
+    --kernel-name regex:jacobi_sweep_kernel \
     --launch-count 1
 
 add_case \
@@ -55,5 +55,5 @@ case_ncu_basic_args \
     --kernel-name regex:pair_stats_kernel \
     --launch-count 2
 case_ncu_deep_args \
-    --kernel-name regex:apply_rotation_kernel \
+    --kernel-name regex:jacobi_sweep_kernel \
     --launch-count 1

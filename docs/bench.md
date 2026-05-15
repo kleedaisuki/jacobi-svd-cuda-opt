@@ -34,12 +34,12 @@ APP_ARGS=(
 add_case small experiments/cases/mat/small.mat --layout-transpose-mode auto
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 
 add_case large experiments/cases/mat/large.mat --layout-transpose-mode on
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 ```
 
 `APP_ARGS` are passed to every program invocation. Arguments after each `add_case` are appended only for that case.
@@ -49,7 +49,7 @@ The profiler argument helpers configure only the most recently added case:
 ```bash
 case_nsys_args --sample=none
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 ```
 
 `case_app_args` can also replace the per-case application arguments after `add_case`:
@@ -154,7 +154,7 @@ Nsight Compute (`ncu`) needs permission to access NVIDIA GPU performance counter
 
 ```bash
 case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
-case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
 ```
 
 Useful Nsight Compute filter flags include:

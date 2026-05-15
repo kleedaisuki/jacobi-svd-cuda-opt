@@ -32,7 +32,7 @@ Instance script contract:
   add_case small experiments/cases/mat/small.mat --layout-transpose-mode auto
   case_nsys_args --sample=none
   case_ncu_basic_args --kernel-name regex:pair_stats_kernel --launch-count 3
-  case_ncu_deep_args --kernel-name regex:apply_rotation_kernel --launch-count 1
+  case_ncu_deep_args --kernel-name regex:jacobi_sweep_kernel --launch-count 1
   add_case big   experiments/cases/mat/big.mat   --layout-transpose-mode on
 
 Results are written under:
